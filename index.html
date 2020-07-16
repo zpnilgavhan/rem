@@ -13,19 +13,28 @@
         <h1>BANK SMART CONTRACTS</h1>
         <div class="box">
             <h1 id="refresh"></h1>
+            <h1>Your Last Updated balance : </h1>
             <h1 id="balance"></h1>
         </div>
-        <div class="box">
+        <div class="box" id=depositBox>
             <input type="text" id="amount1" placeholder="Amount to deposit">
             <button id='deposit'>Deposit</button>
         </div>
-        <div class="box">
+        <div class="box" id=withdrawBox>
             <input type="text" id="amount2" placeholder="Amount to Send">
             <input type="text" id="mob" placeholder="Mobile NUmber">
             <button id='withdraw'>Send</button>
         </div>
         <div class="box">
             <button id='update'>Update</button> 
+        </div>
+        <div class="box" id="verifyMe">
+            <input type="text" id="userId" placeholder="userId">
+            <input type="text" id="passWd" placeholder="passWd">
+            <button id='signIn'>Sign In</button>
+        </div>
+        <div class="box" id="logMeOut">
+            <button id='signOut'>Sign Out</button> 
         </div>
     </div>
     
@@ -35,79 +44,117 @@
     
     <script>
         var contract;
-        
+        var signedStatus = 0 ;
         $(document).ready(function()
         {
             web3 = new Web3(web3.currentProvider);
             
-            var address = "0x2e6E1D00d0B8F104A860d6E28bAa750D418F3058";
+            var address = "0x7178951f8D6ca9bEf81Ddfc6CF019cDeE561cf96";
             
             var abi = [
-            {
-                "constant": false,
-                "inputs": [
-                    {
-                        "name": "amount",
-                        "type": "int256"
-                    }
-                ],
-                "name": "deposit",
-                "outputs": [],
-                "payable": false,
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "constant": false,
-                "inputs": [
-                    {
-                        "name": "amount",
-                        "type": "int256"
-                    }
-                ],
-                "name": "withdraw",
-                "outputs": [],
-                "payable": false,
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "payable": false,
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            },
-            {
-                "constant": true,
-                "inputs": [],
-                "name": "getBalance",
-                "outputs": [
-                    {
-                        "name": "",
-                        "type": "int256"
-                    }
-                ],
-                "payable": false,
-                "stateMutability": "view",
-                "type": "function"
-            }
-        ];
-            
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "int256"
+			}
+		],
+		"name": "deposit",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [],
+		"name": "signOut",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "userID",
+				"type": "int256"
+			},
+			{
+				"name": "password",
+				"type": "int256"
+			}
+		],
+		"name": "verifyUser",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "amount",
+				"type": "int256"
+			}
+		],
+		"name": "withdraw",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getBalance",
+		"outputs": [
+			{
+				"name": "",
+				"type": "int256"
+			},
+			{
+				"name": "",
+				"type": "int256"
+			},
+			{
+				"name": "",
+				"type": "int256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+
             contract = new web3.eth.Contract(abi,address);
             
-            
+            signedStatus = 0;
             contract.methods.getBalance().call().then(function(bal)
             {
-                $('#balance').html(bal);
-                
+                $('#balance').html(bal[0]);
                 console.log(bal);
             })
+            $('#verifyMe').show();
+            $('#logMeOut').hide();
+            $('#depositBox').hide();
+            $('#withdrawBox').hide();
             
         })
 
         $('#deposit').click(function()
         {
-            $('#refresh').html("");
+            $('#refresh').html("Transaction Pending...hit update to check recent status...");
             var amt = 0;
             amt = parseInt($('#amount1').val());
             console.log(amt);
@@ -116,8 +163,9 @@
             {
                 console.log(accounts[0]);
                 var acc = accounts[0];
-                return contract.methods.deposit(amt).send({from: acc});
-
+                var ret = contract.methods.deposit(amt).send({from: acc});
+                console.log(ret);
+                return ret;
             }).then(function(tx)
             {
                 console.log(tx);
@@ -128,7 +176,7 @@
 
         $('#withdraw').click(function()
         {
-            $('#refresh').html("");
+            $('#refresh').html("Transaction Pending...hit update to check recent status...");
             var amt = 0;
             amt = parseInt($('#amount2').val());
 
@@ -136,7 +184,6 @@
             {
                 var acc = accounts[0];
                 return contract.methods.withdraw(amt).send({from: acc});
-
             }).then(function(tx)
             {
                 console.log(tx);
@@ -144,20 +191,89 @@
                 console.log(tx);
             })
         })
-        
 
+        $('#signIn').click(function()
+        {
+            $('#refresh').html("Signing in Pending...hit update to check recent status...");
+            var uid = parseInt($('#userId').val());
+            var pswd = parseInt($('#passWd').val());
+
+            web3.eth.getAccounts().then(function(accounts)
+            {
+                var acc = accounts[0];
+                return contract.methods.verifyUser(uid,pswd).send({from: acc});
+            }).then(function(tx)
+            {
+                console.log(tx);
+            }).catch(function(tx){
+                console.log(tx);
+            })
+        })
+
+        $('#signOut').click(function()
+        {
+            $('#refresh').html("Signing you out...This might take few sec..");
+            web3.eth.getAccounts().then(function(accounts)
+            {
+                var acc = accounts[0];
+                return contract.methods.signOut().send({from: acc});
+            }).then(function(tx)
+            {
+                console.log(tx);
+            }).catch(function(tx){
+                console.log(tx);
+            })
+        })
         $('#update').click(function()
         {
             contract.methods.getBalance().call().then(function(bal)
             {
-                var bal1 = $('#balance').html();
-                $('#refresh').html("");
-                if(bal1 != bal)
+                if(bal[1]==0)
                 {
-                    $('#refresh').html("Updated");
+                    var bal1 = $('#balance').html();
+                    if(bal1 != bal[0])
+                    {
+                        if(bal1 > bal[0])
+                        $('#refresh').html("Updated,Amt debited");
+                        else
+                        $('#refresh').html("Updated,Amt credited");
+                    }
+                    
+                    $('#balance').html(bal[0]);
+                    console.log(bal);
                 }
-                $('#balance').html(bal);
-                console.log(bal);
+                else if(bal[1]==-1){
+                    $('#refresh').html("User not authorised to do transaction...");
+                }
+                else if(bal[1]==-2){
+                    $('#refresh').html("Invalid amt...Balance cannot be negative...");
+                }
+                if(bal[2]==1)
+                {
+                    $('#verifyMe').hide();
+                    $('#logMeOut').show();
+                    $('#depositBox').show();
+                    $('#withdrawBox').show();
+                    if(signedStatus != bal[2])
+                    {
+                        signedStatus = 1;
+                        $('#refresh').html("Signed In");
+                    }
+                    
+                }
+                else if(bal[2]==0)
+                {
+                    $('#verifyMe').show();
+                    $('#logMeOut').hide();
+                    $('#depositBox').hide();
+                    $('#withdrawBox').hide();
+                    if(signedStatus != bal[2])
+                    {
+                        signedStatus = 0;
+                        $('#refresh').html("Signed Out");
+                    }
+                }
+                
             })
         }
         )
@@ -194,7 +310,7 @@
         border-radius: 20px;
         
     }
-    #amount1,#amount2,#mob{
+    #amount1,#amount2,#mob,#userId,#passWd{
         text-align: center;
         margin: 10px;
         padding: 10px;
@@ -203,12 +319,22 @@
         background-color: #6d052d;
         color: whitesmoke;
     }
-    #deposit,#withdraw,#update{
+    #deposit,#withdraw,#update,#signIn,#signOut{
         margin: 10px;
         padding: 10px;
         border-radius: 10px;
         border-color: rgb(2, 53, 25);
         background-color: rgb(13, 61, 3);
         color: whitesmoke;
+    }
+</style>
+
+<style>
+    #logMeOut{
+        background-color: rgb(202, 12, 12);
+    }
+    #verifyMe   
+    {
+        background-color: rgb(13, 132, 168);
     }
 </style>
